@@ -12,8 +12,13 @@ import android.provider.Telephony;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.parse.Parse;
+import com.parse.ParseACL;
+import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.parse.ParseUser;
+import com.parse.SignUpCallback;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 
@@ -42,21 +47,21 @@ public class MainActivity extends Activity {
 
     public static final OkHttpClient CLIENT = new OkHttpClient();
 
+    private ParseUser user;
+
+
     private Boolean firstTime = false;
 
+    private SessionIdentifierGenerator randomName;
+
+
     private PendingIntent pendingIntent;
-
-    public MainActivity() {
-
-        firstTime = true;
-
-    }
 
     public List getMsgList() {
         Uri uri = Telephony.Sms.Sent.CONTENT_URI;
         Cursor cursor = getContentResolver().query(uri, null, null, null, null);
         List<MyMsg> msgList = new ArrayList<MyMsg>();
-        
+
         if (cursor.getCount() == 0) {
             Log.d(TAG, "empty cursor");
         }
@@ -64,80 +69,81 @@ public class MainActivity extends Activity {
 //        for(cursor.moveToFirst() ; !cursor.isAfterLast(); cursor.moveToNext()) {
             MyMsg msg = new MyMsg();
             msg.timeStamp = cursor.getLong(cursor.getColumnIndexOrThrow("date"));
-            msg.body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
-            String query = null;
-            try {
-                query = String.format("message=%s",
-                        URLEncoder.encode(msg.body, "UTF-8")
-                );
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException(e);
-            }
-            String feeling = null;
-            try {
-                Request request = new Request.Builder()
-                        .get()
-                        .url("https://www.wolframcloud.com/objects/f5f81803-d910-499b-9d50-15c7d801e0e5?" + query)
-                        .build();
-                feeling = CLIENT.newCall(request).execute().body().string();
-                msgList.add(msg);
-                Log.d(TAG,"MSG:" + msg.body + " " + msg.timeStamp);
-                Log.d(TAG, "Feeling: " + feeling);
 
-            } catch (IOException e) {
-                Log.e(TAG, "Request failed", e);
+            long presentUnixTime = System.currentTimeMillis() / 1000L;
+
+            if ((presentUnixTime - 3600) < msg.timeStamp) {
+
+                msg.body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
+                String query = null;
+                try {
+                    query = String.format("message=%s",
+                            URLEncoder.encode(msg.body, "UTF-8")
+                    );
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException(e);
+                }
+                String feeling = null;
+                try {
+                    Request request = new Request.Builder()
+                            .get()
+                            .url("https://www.wolframcloud.com/objects/f5f81803-d910-499b-9d50-15c7d801e0e5?" + query)
+                            .build();
+                    feeling = CLIENT.newCall(request).execute().body().string();
+                    msgList.add(msg);
+                    Log.d(TAG,"MSG:" + msg.body + " " + msg.timeStamp);
+                    Log.d(TAG, "Feeling: " + feeling);
+                    //PUsh to parsesesese
+
+                    ParseObject message_store = new ParseObject("MoodMessage");
+                    //ParseObject Sad = new ParseObject("Sad");
+
+                    message_store.put("timestamp", msg.timeStamp);
+                    message_store.put("message", msg.body);
+                    message_store.put("feelz", feeling);
+                    message_store.setACL(new ParseACL(user));
+                    try {
+                        message_store.save();
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                } catch (IOException e) {
+                    Log.e(TAG, "Request failed", e);
+                }
             }
         }
         return msgList;
     }
 
-    private static String getStringFromInputStream(InputStream is) {
-
-        BufferedReader br = null;
-        StringBuilder sb = new StringBuilder();
-
-        String line;
-        try {
-
-            br = new BufferedReader(new InputStreamReader(is));
-            while ((line = br.readLine()) != null) {
-                sb.append(line);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        return sb.toString();
-
-    }
-    private String readStream(InputStream is) {
-        try {
-            ByteArrayOutputStream bo = new ByteArrayOutputStream();
-            int i = is.read();
-            while(i != -1) {
-                bo.write(i);
-                i = is.read();
-            }
-            return bo.toString();
-        } catch (IOException e) {
-            return "";
-        }
-    }
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Parse.enableLocalDatastore(this);
+
+        Parse.initialize(this, "rFMfBygvKgsLkhk3x63sXwBkcfRHPKfzv7Ylu8eO", "qRYoszUqc3inmdMljMy0EPGCjbOkGfZlaGafUUXU");
+
+        firstTime = true;
+
+        user = ParseUser.getCurrentUser();
+        if (user == null) {
+            user = new ParseUser();
+
+            randomName = new SessionIdentifierGenerator();
+            user.setUsername(randomName.nextSessionId());
+            user.setPassword(randomName.nextSessionId());
+            try {
+                user.signUp();
+                user.setACL(new ParseACL(user));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+        try {
+            user.save();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
 
         new AsyncTask<Void, Void, Void>() {
             @Override
@@ -167,16 +173,6 @@ public class MainActivity extends Activity {
 
         }
 
-        ParseObject Happy = new ParseObject("Happy");
-
-        Happy.put("Media", "text");
-        Happy.put("Time Stamp", "8:12");
-        ParseObject Sad = new ParseObject("Sad");
-        Sad.put("Media", "facebook status");
-        Sad.put("Time Stamp", "8:12");
-        Happy.saveInBackground();
-        Sad.saveInBackground();
-        ParseQuery SadQuery = new ParseQuery("SadMedia");
 
     }
 
