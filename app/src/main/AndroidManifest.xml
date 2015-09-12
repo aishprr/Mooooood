@@ -3,12 +3,15 @@
     package="com.example.aishpr.mooooood" >
 
     <uses-permission android:name="android.permission.READ_SMS"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme"
+        android:name=".MoodApplication">
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name" >
