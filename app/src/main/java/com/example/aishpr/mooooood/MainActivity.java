@@ -8,6 +8,9 @@ import android.provider.Telephony;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
+
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +22,15 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ParseObject Happy = new ParseObject("Happy");
+        Happy.put("Media", "text");
+        Happy.put("Time Stamp", "8:12");
+        ParseObject Sad = new ParseObject("Sad");
+        Sad.put("Media", "facebook status");
+        Sad.put("Time Stamp", "8:12");
+        Happy.saveInBackground();
+        Sad.saveInBackground();
+        ParseQuery SadQuery = new ParseQuery("SadMedia");
         List<MyMsg> texts = getMsgList();
         for (MyMsg text : texts) {
             Log.d("MSG", text.timeStamp + "" + text.body);
