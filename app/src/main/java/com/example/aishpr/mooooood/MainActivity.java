@@ -11,10 +11,21 @@ import android.os.Bundle;
 import android.provider.Telephony;
 import android.text.TextUtils;
 import android.util.Log;
+<<<<<<< Updated upstream
 
 import com.parse.Parse;
 import com.parse.ParseACL;
 import com.parse.ParseException;
+=======
+import android.widget.TextView;
+
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
+>>>>>>> Stashed changes
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
@@ -42,7 +53,16 @@ import java.net.URL;
 /**
  * Created by ridhisurana on 9/12/15.
  */
+
+
+
 public class MainActivity extends Activity {
+
+    private TextView info;
+    private LoginButton loginButton;
+    public CallbackManager callbackManager = CallbackManager.Factory.create();
+
+
     public static final String TAG = "MainActivity";
 
     public static final OkHttpClient CLIENT = new OkHttpClient();
@@ -118,7 +138,13 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        FacebookSdk.sdkInitialize(getApplicationContext());
 
+        setContentView(R.layout.main_activity);
+        info = (TextView) findViewById(R.id.info);
+        loginButton = (LoginButton) findViewById(R.id.login_button);
+
+<<<<<<< Updated upstream
         Parse.enableLocalDatastore(this);
 
         Parse.initialize(this, "rFMfBygvKgsLkhk3x63sXwBkcfRHPKfzv7Ylu8eO", "qRYoszUqc3inmdMljMy0EPGCjbOkGfZlaGafUUXU");
@@ -145,6 +171,33 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
 
+=======
+        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                info.setText(
+                        "User ID: "
+                                + loginResult.getAccessToken().getUserId()
+                                + "\n" +
+                                "Auth Token: "
+                                + loginResult.getAccessToken().getToken()
+                );
+            }
+
+            @Override
+            public void onCancel() {
+                info.setText("Login attempt canceled.");
+
+            }
+
+
+            @Override
+            public void onError(FacebookException e) {
+                info.setText("Login attempt failed.");
+
+            }
+        });
+>>>>>>> Stashed changes
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
@@ -175,6 +228,17 @@ public class MainActivity extends Activity {
 
 
     }
+
+
+
+    @Override
+        protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+            callbackManager.onActivityResult(requestCode, resultCode, data);
+        }
+
+
+
+
 
 
 }
