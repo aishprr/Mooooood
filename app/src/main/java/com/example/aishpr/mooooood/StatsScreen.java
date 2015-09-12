@@ -5,12 +5,17 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.parse.ParseObject;
+
 public class StatsScreen extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stats_screen);
+        ParseObject testObject = new ParseObject("MHacksTest");
+        testObject.put("foo", "bar");
+        testObject.saveInBackground();
     }
 
 
