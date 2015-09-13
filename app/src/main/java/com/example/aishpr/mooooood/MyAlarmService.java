@@ -11,6 +11,23 @@ import android.os.IBinder;
 import android.provider.Telephony;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
+
+import com.facebook.AccessToken;
+import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
+import com.parse.ParseACL;
+import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.ParseUser;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -23,146 +40,192 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 
-public class MyAlarmService extends Service
-{
+public class MyAlarmService extends Service {
 
-    //private NotificationManager mManager;
+    public static final String TAG = "MyAlarmService";
 
+    public static final OkHttpClient CLIENT = new OkHttpClient();
 
-    private static String getStringFromInputStream(InputStream is) {
-
-        BufferedReader br = null;
-        StringBuilder sb = new StringBuilder();
-
-        String line;
-        try {
-
-            br = new BufferedReader(new InputStreamReader(is));
-            while ((line = br.readLine()) != null) {
-                sb.append(line);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        return sb.toString();
-
-    }
-    private String readStream(InputStream is) {
-        try {
-            ByteArrayOutputStream bo = new ByteArrayOutputStream();
-            int i = is.read();
-            while(i != -1) {
-                bo.write(i);
-                i = is.read();
-            }
-            return bo.toString();
-        } catch (IOException e) {
-            return "";
-        }
-    }
+    public ParseUser user;
 
     @Override
-    public IBinder onBind(Intent arg0)
-    {
+    public IBinder onBind(Intent arg0) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void onCreate()
-    {
+    public void onCreate() {
         // TODO Auto-generated method stub
         super.onCreate();
+        user = ParseUser.getCurrentUser();
+        Toast.makeText(this, "Started!", Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "Alarmed");
     }
 
 
-
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId)
-    {
-        int returnVal = super.onStartCommand(intent, flags , startId);
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        int returnVal = super.onStartCommand(intent, flags, startId);
 
-        List<MyMsg> texts = getMsgList();
-        for (MyMsg text : texts) {
-            Log.d("MSG", text.timeStamp + "" + text.body);
-        }
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                facebookStatusList();
+                List<MyMsg> texts = getMsgList();
+
+                for (MyMsg text : texts) {
+
+                    Log.d("MSG", text.timeStamp + "" + text.body);
+                }
+
+            }
+        });
+        thread.start();
         return returnVal;
 
+    }
+
+    public void facebookStatusList() {
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        GraphRequest getFBStatus = new GraphRequest(
+                AccessToken.getCurrentAccessToken(),
+                "/me/posts",
+                null,
+                HttpMethod.GET,
+                new GraphRequest.Callback() {
+                    public void onCompleted(GraphResponse response) {
+                        try {
+                            JSONObject allData = response.getJSONObject();
+                            JSONArray data = allData.getJSONArray("data");
+                            for (int i = 0; i < data.length(); i++) {
+                                JSONObject post = data.getJSONObject(i);
+
+                                if (post.has("message")) {
+                                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ssZZZZ");
+                                    Date date = formatter.parse(post.getString("created_time"));
+                                    long epoch = System.currentTimeMillis();
+
+                                    if (epoch - date.getTime() < 3600000) {
+                                        Log.d(TAG, post.getString("message"));
+                                        Log.d(TAG, date.getTime() + " ");
+
+                                        //put in the db
+                                        String query = null;
+                                        try {
+                                            query = String.format("message=%s",
+                                                    URLEncoder.encode(post.getString("message"), "UTF-8")
+                                            );
+                                        } catch (UnsupportedEncodingException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                        String feeling = null;
+                                        try {
+                                            Request request = new Request.Builder()
+                                                    .get()
+                                                    .url("https://www.wolframcloud.com/objects/1231d8f1-eec5-46ad-810d-697662e465cd?" + query)
+                                                    .build();
+                                            feeling = CLIENT.newCall(request).execute().body().string();
+
+
+
+                                            ParseObject message_store = new ParseObject("MoodMessage");
+                                            //ParseObject Sad = new ParseObject("Sad");
+
+                                            message_store.put("timestamp", date.getTime());
+                                            message_store.put("message", post.getString("message"));
+                                            message_store.put("feelz", feeling);
+
+                                            message_store.setACL(new ParseACL(user));
+                                            try {
+                                                message_store.save();
+                                            } catch (ParseException e) {
+                                                e.printStackTrace();
+                                            }
+                                        } catch (IOException e) {
+                                            Log.e(TAG, "Request failed", e);
+                                        }
+                                    }
+                                } else {
+                                    continue;
+                                }
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        } catch (java.text.ParseException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+        );
     }
 
     public List getMsgList() {
         Uri uri = Telephony.Sms.Sent.CONTENT_URI;
         Cursor cursor = getContentResolver().query(uri, null, null, null, null);
         List<MyMsg> msgList = new ArrayList<MyMsg>();
-        /*cursor.moveToFirst();
-        List<MyMsg> msgList = new ArrayList<MyMsg>();
-        MyMsg msg = new MyMsg();
-        msg.timeStamp = cursor.getLong(cursor.getColumnIndexOrThrow("timeStamp"));
-        String body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
-        try {
-            byte[] bytes = body.getBytes("UTF8");
-            msg.body = TextUtils.htmlEncode(new String(bytes, "UTF8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+
+        if (cursor.getCount() == 0) {
+            Log.d(TAG, "empty cursor");
         }
-        msgList.add(msg);*/
         while (cursor.moveToNext()) {
-//        for(cursor.moveToFirst() ; !cursor.isAfterLast(); cursor.moveToNext()) {
-            MyMsg msg = new MyMsg();
-            msg.timeStamp = cursor.getLong(cursor.getColumnIndexOrThrow("date"));
-            String body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
-            String feeling = "";
-            InputStream in;
-            try {
-                byte[] bytes = body.getBytes("UTF8");
-                msg.body = TextUtils.htmlEncode(new String(bytes, "UTF8"));
+            for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+                MyMsg msg = new MyMsg();
+                msg.timeStamp = cursor.getLong(cursor.getColumnIndexOrThrow("date"));
 
-                String url = "https://www.wolframcloud.com/objects/f5f81803-d910-499b-9d50-15c7d801e0e5";
-                String charset = "UTF-8";  // Or in Java 7 and later, use the constant: java.nio.charset.StandardCharsets.UTF_8.name()
-                String param1 = msg.body;
+                long epoch = System.currentTimeMillis();
 
-                String query = String.format("message=%s",
-                        URLEncoder.encode(param1, charset)
-                );
+                msg.body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
+                String query = null;
+                try {
+                    query = String.format("message=%s",
+                            URLEncoder.encode(msg.body, "UTF-8")
+                    );
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException(e);
+                }
+                String feeling = null;
+                try {
+                    Request request = new Request.Builder()
+                            .get()
+                            .url("https://www.wolframcloud.com/objects/1231d8f1-eec5-46ad-810d-697662e465cd?" + query)
+                            .build();
+                    feeling = CLIENT.newCall(request).execute().body().string();
 
-                URLConnection connection = new URL(url + "?" + query).openConnection();
-                connection.setRequestProperty("Accept-Charset", charset);
-                in = new BufferedInputStream(connection.getInputStream());
-                readStream(in);
-                feeling = getStringFromInputStream(in);
-                in.close();
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
+
+                    if ((epoch - msg.timeStamp) < 3600000) {
+                        Log.d(TAG, "MSGPOI:" + msg.body + " " + msg.timeStamp);
+                        msgList.add(msg);
+                        ParseObject message_store = new ParseObject("MoodMessage");
+
+                        message_store.put("timestamp", msg.timeStamp);
+                        message_store.put("message", msg.body);
+                        message_store.put("feelz", feeling);
+                        message_store.setACL(new ParseACL(user));
+                        try {
+                            message_store.save();
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+
+                } catch (IOException e) {
+                    Log.e(TAG, "Request failed", e);
+                }
             }
-
-            Log.d("FEELZ", feeling);
-            msgList.add(msg);
-
         }
-
         return msgList;
     }
+
     @Override
-    public void onDestroy()
-    {
+    public void onDestroy() {
         // TODO Auto-generated method stub
         super.onDestroy();
     }

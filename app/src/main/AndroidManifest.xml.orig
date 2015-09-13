@@ -29,7 +29,9 @@
                 "keyboard|keyboardHidden|screenLayout|screenSize|orientation"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:label="@string/app_name" />
+<<<<<<< HEAD
         <activity android:name=".MoodSwingGraph"/>
+=======
 
         <service android:name=".MyAlarmService"
             android:enabled="true" />
@@ -39,6 +41,8 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
+
+>>>>>>> master
     </application>
 
 </manifest>
