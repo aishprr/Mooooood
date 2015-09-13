@@ -79,6 +79,8 @@ public class MainActivity extends Activity {
     private PendingIntent pendingIntent;
 
     protected void onCreate(Bundle savedInstanceState) {
+
+
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getApplicationContext());
 
@@ -94,8 +96,6 @@ public class MainActivity extends Activity {
                 startActivity(intent);
             }
         });
-        Parse.enableLocalDatastore(this);
-        setContentView(R.layout.facebook_signin);
         info = (TextView) findViewById(R.id.info);
         loginButton = (LoginButton) findViewById(R.id.login_button);
 

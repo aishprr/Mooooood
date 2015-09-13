@@ -4,7 +4,9 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:padding="12dp" >
+    android:padding="12dp"
+    android:background="@drawable/back"
+    android:scaleType = "centerCrop">
 
     <com.facebook.login.widget.LoginButton
         android:id="@+id/login_button"
@@ -20,6 +22,16 @@
         android:id="@+id/graphbutton"
         android:text="Open Graph"
         android:layout_below="@id/login_button"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Mooooood!"
+        android:typeface="serif"
+        android:id="@+id/textView"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>
 
