@@ -11,9 +11,12 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Telephony;
 import android.util.Log;
+<<<<<<< HEAD
 import android.view.View;
 import android.widget.Button;
 
+=======
+>>>>>>> master
 
 
 import com.facebook.AccessToken;
@@ -23,7 +26,10 @@ import com.facebook.HttpMethod;
 import com.parse.Parse;
 import com.parse.ParseACL;
 import com.parse.ParseException;
+<<<<<<< HEAD
+=======
 
+>>>>>>> master
 import android.widget.TextView;
 
 import com.facebook.CallbackManager;
@@ -32,11 +38,17 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+<<<<<<< HEAD
+
+=======
+>>>>>>> master
 import com.parse.ParseObject;
 import com.parse.ParseUser;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 
+<<<<<<< HEAD
+=======
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,6 +56,7 @@ import org.json.JSONObject;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+>>>>>>> master
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -78,9 +91,72 @@ public class MainActivity extends Activity {
 
     private PendingIntent pendingIntent;
 
+<<<<<<< HEAD
+    public List getMsgList() {
+        Uri uri = Telephony.Sms.Sent.CONTENT_URI;
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+        List<MyMsg> msgList = new ArrayList<MyMsg>();
+
+        if (cursor.getCount() == 0) {
+            Log.d(TAG, "empty cursor");
+        }
+        while (cursor.moveToNext()) {
+//        for(cursor.moveToFirst() ; !cursor.isAfterLast(); cursor.moveToNext()) {
+            MyMsg msg = new MyMsg();
+            msg.timeStamp = cursor.getLong(cursor.getColumnIndexOrThrow("date"));
+
+            long presentUnixTime = System.currentTimeMillis() / 1000L;
+
+            if ((presentUnixTime - 3600) < msg.timeStamp) {
+
+                msg.body = cursor.getString(cursor.getColumnIndexOrThrow("body"));
+                String query = null;
+                try {
+                    query = String.format("message=%s",
+                            URLEncoder.encode(msg.body, "UTF-8")
+                    );
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException(e);
+                }
+                String feeling = null;
+                try {
+                    Request request = new Request.Builder()
+                            .get()
+                            .url("https://www.wolframcloud.com/objects/1231d8f1-eec5-46ad-810d-697662e465cd?" + query)
+                            .build();
+                    feeling = CLIENT.newCall(request).execute().body().string();
+                    msgList.add(msg);
+                    Log.d(TAG,"MSG:" + msg.body + " " + msg.timeStamp);
+                    Log.d(TAG, "Feeling: " + feeling);
+                    //PUsh to parsesesese
+
+                    ParseObject message_store = new ParseObject("MoodMessage");
+                    //ParseObject Sad = new ParseObject("Sad");
+
+                    message_store.put("timestamp", msg.timeStamp);
+                    message_store.put("message", msg.body);
+                    message_store.put("feelz", feeling);
+                    message_store.setACL(new ParseACL(user));
+                    try {
+                        message_store.save();
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                } catch (IOException e) {
+                    Log.e(TAG, "Request failed", e);
+                }
+            }
+        }
+        return msgList;
+    }
+=======
+>>>>>>> master
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getApplicationContext());
+<<<<<<< HEAD
 
         setContentView(R.layout.facebook_signin);
         info = (TextView) findViewById(R.id.info);
@@ -95,6 +171,7 @@ public class MainActivity extends Activity {
             }
         });
         Parse.enableLocalDatastore(this);
+=======
         setContentView(R.layout.main_activity);
         info = (TextView) findViewById(R.id.info);
         loginButton = (LoginButton) findViewById(R.id.login_button);
@@ -107,6 +184,7 @@ public class MainActivity extends Activity {
             editor.putBoolean("first", true);
             editor.commit();
         }
+>>>>>>> master
 
 
         firstTime = true;
@@ -131,7 +209,11 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
 
+<<<<<<< HEAD
+
+=======
         loginButton.setReadPermissions(Arrays.asList("user_posts"));
+>>>>>>> master
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
@@ -151,6 +233,39 @@ public class MainActivity extends Activity {
 
             }
         });
+<<<<<<< HEAD
+
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                getMsgList();
+                return null;
+            }
+        }.execute();
+        if (firstTime) {
+            firstTime = false;
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(System.currentTimeMillis());
+            calendar.set(Calendar.HOUR_OF_DAY, 14);
+
+
+            Intent myIntent = new Intent(MainActivity.this, MyTextReceiver.class);
+
+            pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, myIntent, 0);
+
+            AlarmManager alarmManager = (AlarmManager)getSystemService(ALARM_SERVICE);
+            // With setInexactRepeating(), you have to use one of the AlarmManager interval
+            // constants--in this case, AlarmManager.INTERVAL_DAY.
+            alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+                    AlarmManager.INTERVAL_HOUR, pendingIntent);
+            //alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), pendingIntent);
+
+        }
+
+
+=======
+>>>>>>> master
     }
 
     @Override
