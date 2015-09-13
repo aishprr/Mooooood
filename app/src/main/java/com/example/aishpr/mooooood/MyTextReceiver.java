@@ -1,4 +1,4 @@
-package com.example.aishpr.mooooood;
+/*package com.example.aishpr.mooooood;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -14,4 +14,4 @@ public class MyTextReceiver extends BroadcastReceiver
         context.startService(service1);
 
     }
-}
+}*/
