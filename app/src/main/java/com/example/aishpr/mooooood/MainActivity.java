@@ -88,14 +88,14 @@ public class MainActivity extends Activity {
         info = (TextView) findViewById(R.id.info);
         loginButton = (LoginButton) findViewById(R.id.login_button);
 
-        Button graphButton = (Button) findViewById(R.id.graphbutton);
+        /*Button graphButton = (Button) findViewById(R.id.graphbutton);
         graphButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, MoodSwingGraph.class);
                 startActivity(intent);
             }
-        });
+        });*/
         info = (TextView) findViewById(R.id.info);
         loginButton = (LoginButton) findViewById(R.id.login_button);
 
@@ -135,7 +135,8 @@ public class MainActivity extends Activity {
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-
+                Intent intent = new Intent(MainActivity.this, MoodSwingGraph.class);
+                startActivity(intent);
             }
 
             @Override
