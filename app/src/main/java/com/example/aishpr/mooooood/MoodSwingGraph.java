@@ -9,10 +9,16 @@ package com.example.aishpr.mooooood;
         import android.util.Log;
 
         import com.androidplot.Plot;
+        import com.androidplot.ui.SizeLayoutType;
+        import com.androidplot.ui.SizeMetrics;
         import com.androidplot.util.PixelUtils;
+        import com.androidplot.xy.BoundaryMode;
+        import com.androidplot.xy.LineAndPointFormatter;
+        import com.androidplot.xy.PointLabelFormatter;
         import com.androidplot.xy.SimpleXYSeries;
+        import com.androidplot.xy.XYPlot;
         import com.androidplot.xy.XYSeries;
-        import com.androidplot.xy.*;
+        import com.androidplot.xy.XYStepMode;
         import com.parse.FindCallback;
         import com.parse.ParseException;
         import com.parse.ParseObject;
@@ -28,6 +34,7 @@ package com.example.aishpr.mooooood;
         import java.util.Observable;
         import java.util.Observer;
         import java.util.Calendar;
+
 
 
 public class MoodSwingGraph extends Activity {
@@ -124,25 +131,17 @@ public class MoodSwingGraph extends Activity {
         }
         MoodSwingsPlot = (XYPlot) findViewById(R.id.MoodSwingsPlot);
         MoodSwingsPlot.getGraphWidget().setDomainValueFormat(new DecimalFormat("0"));
+        MoodSwingsPlot.getGraphWidget().getGridBackgroundPaint().setColor(Color.WHITE);
 
-        XYSeries series1 = new SimpleXYSeries(Arrays.asList(timeArray), SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "Series1");
 
-        XYSeries series2 = new SimpleXYSeries(Arrays.asList(happyFeelzPercentages), SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "Series2");
-
-        LineAndPointFormatter series1Format = new LineAndPointFormatter(
-                Color.rgb(0, 200, 0),                   // line color
-                Color.rgb(0, 100, 0),                   // point color
-                null,                                   // fill color (none)
-                new PointLabelFormatter(Color.WHITE));                           // text color
-
-        MoodSwingsPlot.addSeries(series1, series1Format);
+        XYSeries series2 = new SimpleXYSeries(Arrays.asList(happyFeelzPercentages), SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "% Happy!");
 
         // same as above:
         MoodSwingsPlot.addSeries(series2,
                 new LineAndPointFormatter(
                         Color.rgb(0, 0, 200),
                         Color.rgb(0, 0, 100),
-                        null,
+                        Color.rgb(0, 204, 102),
                         new PointLabelFormatter(Color.WHITE)));
 
         MoodSwingsPlot.getGraphWidget().getGridBackgroundPaint().setColor(Color.WHITE);
@@ -150,10 +149,16 @@ public class MoodSwingGraph extends Activity {
         MoodSwingsPlot.getGraphWidget().getDomainOriginLinePaint().setColor(Color.BLACK);
         MoodSwingsPlot.getGraphWidget().getRangeOriginLinePaint().setColor(Color.BLACK);
 
+        MoodSwingsPlot.getGraphWidget().setSize(new SizeMetrics(
+                0.9f, SizeLayoutType.RELATIVE,
+                0.9f, SizeLayoutType.RELATIVE));
         MoodSwingsPlot.setBorderStyle(Plot.BorderStyle.SQUARE, null, null);
         MoodSwingsPlot.getBorderPaint().setStrokeWidth(1);
         MoodSwingsPlot.getBorderPaint().setAntiAlias(false);
         MoodSwingsPlot.getBorderPaint().setColor(Color.WHITE);
+        MoodSwingsPlot.setDomainStep(XYStepMode.SUBDIVIDE, 10);
+
+        MoodSwingsPlot.setRangeBoundaries(0, 100, BoundaryMode.FIXED);
 
         // setup our line fill paint to be a slightly transparent gradient:
         Paint lineFill = new Paint();
@@ -165,6 +170,7 @@ public class MoodSwingGraph extends Activity {
         MoodSwingsPlot.getGraphWidget().setPaddingRight(2);
 
         MoodSwingsPlot.setDomainStep(XYStepMode.INCREMENT_BY_PIXELS, 1);
+        //MoodSwingsPlot.setDomainBoundaries(0, BoundaryMode.FIXED, 100, BoundaryMode.FIXED);
 
 
     }
