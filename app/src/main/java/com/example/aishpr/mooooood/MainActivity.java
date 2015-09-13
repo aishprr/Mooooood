@@ -135,7 +135,8 @@ public class MainActivity extends Activity {
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-
+                Intent intent = new Intent(MainActivity.this, MoodSwingGraph.class);
+                startActivity(intent);
             }
 
             @Override
