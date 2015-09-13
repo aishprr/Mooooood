@@ -95,7 +95,7 @@ public class MainActivity extends Activity {
             }
         });
         Parse.enableLocalDatastore(this);
-        setContentView(R.layout.main_activity);
+        setContentView(R.layout.facebook_signin);
         info = (TextView) findViewById(R.id.info);
         loginButton = (LoginButton) findViewById(R.id.login_button);
 
