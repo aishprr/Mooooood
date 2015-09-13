@@ -9,14 +9,14 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Telephony;
-import android.text.TextUtils;
 import android.util.Log;
-<<<<<<< Updated upstream
+import android.view.View;
+import android.widget.Button;
+
 
 import com.parse.Parse;
 import com.parse.ParseACL;
 import com.parse.ParseException;
-=======
 import android.widget.TextView;
 
 import com.facebook.CallbackManager;
@@ -25,29 +25,18 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
->>>>>>> Stashed changes
+
 import com.parse.ParseObject;
-import com.parse.ParseQuery;
 import com.parse.ParseUser;
-import com.parse.SignUpCallback;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.net.URL;
-
 
 
 /**
@@ -107,7 +96,7 @@ public class MainActivity extends Activity {
                 try {
                     Request request = new Request.Builder()
                             .get()
-                            .url("https://www.wolframcloud.com/objects/f5f81803-d910-499b-9d50-15c7d801e0e5?" + query)
+                            .url("https://www.wolframcloud.com/objects/1231d8f1-eec5-46ad-810d-697662e465cd?" + query)
                             .build();
                     feeling = CLIENT.newCall(request).execute().body().string();
                     msgList.add(msg);
@@ -140,11 +129,18 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getApplicationContext());
 
-        setContentView(R.layout.main_activity);
+        setContentView(R.layout.facebook_signin);
         info = (TextView) findViewById(R.id.info);
         loginButton = (LoginButton) findViewById(R.id.login_button);
 
-<<<<<<< Updated upstream
+        Button graphButton = (Button) findViewById(R.id.graphbutton);
+        graphButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, MoodSwingGraph.class);
+                startActivity(intent);
+            }
+        });
         Parse.enableLocalDatastore(this);
 
         Parse.initialize(this, "rFMfBygvKgsLkhk3x63sXwBkcfRHPKfzv7Ylu8eO", "qRYoszUqc3inmdMljMy0EPGCjbOkGfZlaGafUUXU");
@@ -171,7 +167,7 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
 
-=======
+
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
@@ -197,7 +193,7 @@ public class MainActivity extends Activity {
 
             }
         });
->>>>>>> Stashed changes
+
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
